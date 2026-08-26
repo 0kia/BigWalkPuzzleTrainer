@@ -4,6 +4,7 @@ const SETS = ['Symbols', 'Squiggles', 'Poses'];
 
 const imageEl = document.getElementById('symbol');
 const buttonsEl = document.getElementById('buttons');
+const rerollContainer = document.getElementById('reroll-container');
 const setSwitcherEl = document.getElementById('set-switcher');
 const streakCountEl = document.getElementById('streak-count');
 
@@ -40,7 +41,7 @@ rerollBtn.addEventListener('click', () => {
   if (locked) return;
   showNewSymbol();
 });
-buttonsEl.appendChild(rerollBtn);
+rerollContainer.appendChild(rerollBtn);
 
 function switchSet(setName) {
   if (setName === currentSet) return;
