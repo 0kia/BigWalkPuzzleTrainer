@@ -1,13 +1,6 @@
-#kettles-title {
-  margin: 0 0 10px 0;
-  font-weight: normal;
-  color: #ccc;
-}
-
 #player-toggle {
   display: flex;
   gap: 10px;
-  margin-bottom: 20px;
 }
 
 .player-btn {
@@ -36,7 +29,7 @@
   position: relative;
   width: 90vw;
   max-width: 1000px;
-  height: 40vh;
+  height: 20vh;
   min-height: 260px;
 }
 
