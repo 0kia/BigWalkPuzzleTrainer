@@ -1,0 +1,99 @@
+html, body {
+  height: 100%;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #1e1e1e;
+  font-family: Arial, sans-serif;
+  color: #eee;
+}
+
+#streak {
+  font-size: 18px;
+  margin-bottom: 12px;
+  color: #ccc;
+}
+
+#streak span {
+  font-weight: bold;
+  color: #2ecc71;
+}
+
+#set-switcher {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+#set-switcher button {
+  font-size: 16px;
+  width: auto;
+  height: auto;
+  padding: 10px 18px;
+  background: #333;
+}
+
+#set-switcher button.active {
+  background: #3b7dd8;
+  color: #fff;
+}
+
+#image-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 45vh;
+}
+
+#symbol {
+  max-height: 45vh;
+  max-width: 80vw;
+  object-fit: contain;
+}
+
+#buttons {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 10px;
+  margin-top: 10px;
+}
+
+button {
+  font-size: 24px;
+  width: 60px;
+  height: 60px;
+  border: none;
+  border-radius: 8px;
+  background: #444;
+  color: #eee;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+button:hover {
+  background: #555;
+}
+
+button.correct {
+  background-color: #2ecc71 !important;
+  color: #000;
+}
+
+button.wrong {
+  background-color: #e74c3c !important;
+  color: #000;
+}
+
+button#reroll {
+  background: #7f5af0;
+}
+
+button#reroll:hover {
+  background: #6a4bd1;
+}
+
+button:disabled {
+  cursor: default;
+}
