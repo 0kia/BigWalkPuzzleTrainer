@@ -2,22 +2,50 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Symbol Trainer</title>
+<title>Training Hub</title>
 <link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="kettles.css">
 </head>
 <body>
 
-<div id="streak">Current Streak: <span id="streak-count">0</span></div>
-
-<div id="set-switcher"></div>
-
-<div id="image-container">
-  <img id="symbol" src="" alt="symbol">
+<div id="tabs">
+  <button class="tab-btn active" data-page="page-symbol-trainer">Symbol Trainer</button>
+  <button class="tab-btn" data-page="page-kettles">Kettles Puzzle</button>
 </div>
 
-<div id="buttons"></div>
+<div id="page-symbol-trainer" class="page active">
 
+  <div id="streak">Current Streak: <span id="streak-count">0</span></div>
+
+  <div id="set-switcher"></div>
+
+  <div id="image-container">
+    <img id="symbol" src="" alt="symbol">
+  </div>
+
+  <div id="buttons"></div>
+
+</div>
+
+<div id="page-kettles" class="page">
+
+  <div id="kettles-container"></div>
+
+  <button id="kettles-shuffle">Shuffle Pattern</button>
+	
+  <hr style="width: 100%; margin: 20px 20px 40px 0px;">
+  
+  <div id="kettles-move-container"></div>
+
+  <div id="kettles-status">0 / 12 correct</div>
+
+  <button id="kettles-reset">Reset Kettles</button>
+
+</div>
+
+<script src="tabs.js"></script>
 <script src="script.js"></script>
+<script src="kettles.js"></script>
 
 </body>
 </html>
