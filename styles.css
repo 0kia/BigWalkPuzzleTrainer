@@ -76,11 +76,11 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 45vh;
+  height: 40vh;
 }
 
 #symbol {
-  max-height: 45vh;
+  max-height: 40vh;
   max-width: 80vw;
   object-fit: contain;
 }
@@ -89,8 +89,8 @@ html, body {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 10px;
-  margin-top: 30px;
-  margin-bottom: 30px;
+  margin-top: 20px;
+  margin-bottom: 10px;
 }
 
 button {
