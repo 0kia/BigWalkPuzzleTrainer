@@ -20,31 +20,45 @@ const KETTLE_POSITIONS = [
 
 const TOTAL_SLOTS = KETTLE_POSITIONS.length; // 12
 const ON_COUNT = 6; // how many slots are "1" (occupied) each round
+const TOP_ROW_COUNT = 6; // kettle arena: indices 0-5 = top/inner layer
 
 const kettlesContainer = document.getElementById('kettles-container');
 const kettlesShuffleBtn = document.getElementById('kettles-shuffle');
 const moveContainer = document.getElementById('kettles-move-container');
 const kettlesResetBtn = document.getElementById('kettles-reset');
 const kettlesStatusEl = document.getElementById('kettles-status');
+const moveTitleEl = document.getElementById('kettles-move-title');
+const playerButtons = document.querySelectorAll('.player-btn');
 
-// The pattern the player is trying to recreate below (array of 0/1, length 12)
-let targetStates = [];
+let currentPlayer = 1;
 
-function generateRandomStates() {
-  // 6 ones, 6 zeros, shuffled
-  const states = Array(ON_COUNT).fill(1).concat(Array(TOTAL_SLOTS - ON_COUNT).fill(0));
-  for (let i = states.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [states[i], states[j]] = [states[j], states[i]];
-  }
+// gridStates: the 12 squares in the top grid (0/1)
+// kettleStates: the 12 physical kettle slots below - index 0-5 = top/inner
+//               layer, index 6-11 = floor/outer layer (0/1)
+let gridStates = [];
+let kettleStates = [];
+
+let selectedKettleSlot = null; // used only in Player 1 mode (swap-to-move)
+let gridSlotEls = [];
+let moveSlotEls = [];
+
+function generateRandomStates(minInFirstSix) {
+  let states;
+  do {
+    states = Array(ON_COUNT).fill(1).concat(Array(TOTAL_SLOTS - ON_COUNT).fill(0));
+    for (let i = states.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [states[i], states[j]] = [states[j], states[i]];
+    }
+  } while (minInFirstSix && states.slice(0, 6).reduce((a, b) => a + b, 0) < minInFirstSix);
   return states;
 }
 
-// ---------- Top target grid ----------
+// ---------- Top grid ----------
 
-function renderTargetGrid() {
-  targetStates = generateRandomStates();
+function renderGrid() {
   kettlesContainer.innerHTML = '';
+  gridSlotEls = [];
 
   KETTLE_POSITIONS.forEach((pos, i) => {
     const slot = document.createElement('div');
@@ -53,23 +67,27 @@ function renderTargetGrid() {
     slot.style.top = pos.y + '%';
     slot.dataset.index = i;
 
-    if (targetStates[i] === 1) {
+    if (gridStates[i] === 1) {
       const dot = document.createElement('div');
       dot.className = 'dot';
       slot.appendChild(dot);
     }
 
+    if (currentPlayer === 2) {
+      slot.classList.add('editable');
+      slot.addEventListener('click', () => {
+        gridStates[i] = gridStates[i] === 1 ? 0 : 1;
+        renderGrid();
+        updateStatus();
+      });
+    }
+
     kettlesContainer.appendChild(slot);
+    gridSlotEls.push(slot);
   });
 }
 
-// ---------- Movable semicircle arena ----------
-
-// moveState[i] = 1 if a kettle currently sits in physical slot i (0-11), else 0.
-// Slots 0-5 = inner arc (top layer), slots 6-11 = outer arc (floor layer).
-let moveState = [];
-let selectedSlot = null;
-let moveSlotEls = [];
+// ---------- Movable / display semicircle arena ----------
 
 function computeArcPositions(containerW, containerH, radius) {
   // 6 points swept left-to-right across a downward-bulging semicircle,
@@ -85,12 +103,6 @@ function computeArcPositions(containerW, containerH, radius) {
     positions.push({ x, y });
   }
   return positions;
-}
-
-function resetMoveState() {
-  // Kettles always start on the top 6 (inner) slots
-  moveState = Array(TOTAL_SLOTS).fill(0).map((_, i) => (i < 6 ? 1 : 0));
-  selectedSlot = null;
 }
 
 function renderMoveArena() {
@@ -114,7 +126,11 @@ function renderMoveArena() {
     slot.style.left = pos.x + 'px';
     slot.style.top = pos.y + 'px';
     slot.dataset.index = i;
-    slot.addEventListener('click', () => handleSlotClick(i));
+
+    if (currentPlayer === 1) {
+      slot.addEventListener('click', () => handleKettleSlotClick(i));
+    }
+
     moveContainer.appendChild(slot);
     moveSlotEls.push(slot);
   });
@@ -122,47 +138,52 @@ function renderMoveArena() {
   updateMoveArenaVisuals();
 }
 
-function handleSlotClick(index) {
-  if (selectedSlot === null) {
-    if (moveState[index] === 1) {
-      selectedSlot = index;
+function handleKettleSlotClick(index) {
+  if (selectedKettleSlot === null) {
+    if (kettleStates[index] === 1) {
+      selectedKettleSlot = index;
     }
-  } else if (selectedSlot === index) {
-    selectedSlot = null;
+  } else if (selectedKettleSlot === index) {
+    selectedKettleSlot = null;
   } else {
-    // swap kettle between selected slot and clicked slot
-    const temp = moveState[selectedSlot];
-    moveState[selectedSlot] = moveState[index];
-    moveState[index] = temp;
-    selectedSlot = null;
+    const temp = kettleStates[selectedKettleSlot];
+    kettleStates[selectedKettleSlot] = kettleStates[index];
+    kettleStates[index] = temp;
+    selectedKettleSlot = null;
   }
   updateMoveArenaVisuals();
+  updateStatus();
 }
 
 function updateMoveArenaVisuals() {
-  let correctCount = 0;
-
   moveSlotEls.forEach((slot, i) => {
     slot.innerHTML = '';
-    slot.classList.remove('selected', 'match', 'has-kettle', 'selectable');
+    slot.classList.remove('selected', 'has-kettle', 'selectable');
 
-    if (moveState[i] === 1) {
+    if (kettleStates[i] === 1) {
       const icon = document.createElement('div');
       icon.className = 'kettle-icon';
       slot.appendChild(icon);
       slot.classList.add('has-kettle');
     }
 
-    if (i === selectedSlot) {
-      slot.classList.add('selected');
-    } else if (selectedSlot !== null || moveState[i] === 1) {
-      slot.classList.add('selectable');
-    }
-
-    if (moveState[i] === targetStates[i]) {
-      correctCount++;
+    if (currentPlayer === 1) {
+      if (i === selectedKettleSlot) {
+        slot.classList.add('selected');
+      } else if (selectedKettleSlot !== null || kettleStates[i] === 1) {
+        slot.classList.add('selectable');
+      }
     }
   });
+}
+
+// ---------- Status ----------
+
+function updateStatus() {
+  let correctCount = 0;
+  for (let i = 0; i < TOTAL_SLOTS; i++) {
+    if (gridStates[i] === kettleStates[i]) correctCount++;
+  }
 
   if (correctCount === TOTAL_SLOTS) {
     kettlesStatusEl.textContent = 'Solved!';
@@ -173,17 +194,47 @@ function updateMoveArenaVisuals() {
   }
 }
 
+// ---------- Round setup ----------
+
+function updateModeUI() {
+  moveTitleEl.textContent = currentPlayer === 1
+    ? 'Move the kettles below to match the pattern above'
+    : 'Click the grid above to match the kettles below';
+  kettlesResetBtn.textContent = currentPlayer === 1 ? 'Reset Kettles' : 'Reset Grid';
+}
+
+function startRound(regenerateGiven) {
+  if (currentPlayer === 1) {
+    // Grid is the random "given" pattern; kettles are player-editable,
+    // always starting on the top row.
+    if (regenerateGiven) gridStates = generateRandomStates(0);
+    kettleStates = Array(TOTAL_SLOTS).fill(0).map((_, i) => (i < TOP_ROW_COUNT ? 1 : 0));
+    selectedKettleSlot = null;
+  } else {
+    // Kettles are the random "given" pattern (>=3 guaranteed on top row);
+    // grid starts blank and is player-editable.
+    if (regenerateGiven) kettleStates = generateRandomStates(3);
+    gridStates = Array(TOTAL_SLOTS).fill(0);
+  }
+
+  updateModeUI();
+  renderGrid();
+  renderMoveArena();
+  updateStatus();
+}
+
 // ---------- Buttons ----------
 
-kettlesShuffleBtn.addEventListener('click', () => {
-  renderTargetGrid();
-  resetMoveState();
-  renderMoveArena();
-});
+kettlesShuffleBtn.addEventListener('click', () => startRound(true));
 
-kettlesResetBtn.addEventListener('click', () => {
-  resetMoveState();
-  updateMoveArenaVisuals();
+kettlesResetBtn.addEventListener('click', () => startRound(false));
+
+playerButtons.forEach(btn => {
+  btn.addEventListener('click', () => {
+    currentPlayer = parseInt(btn.dataset.player, 10);
+    playerButtons.forEach(b => b.classList.toggle('active', b === btn));
+    startRound(true);
+  });
 });
 
 // Re-layout the arcs if the window is resized
@@ -206,6 +257,4 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 
 // ---------- Kick things off ----------
 
-renderTargetGrid();
-resetMoveState();
-renderMoveArena();
+startRound(true);
