@@ -2,6 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
 <title>Training Hub</title>
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="kettles.css">
@@ -31,22 +33,28 @@
 
 <div id="page-kettles" class="page">
 
-  <div id="player-toggle">
-    <button class="player-btn active" data-player="1">Player 1</button>
-    <button class="player-btn" data-player="2">Player 2</button>
+  <div id="kettles-outer">
+    <div id="kettles-inner">
+
+      <div id="player-toggle">
+        <button class="player-btn active" data-player="1">Player 1</button>
+        <button class="player-btn" data-player="2">Player 2</button>
+      </div>
+
+      <div id="kettles-container"></div>
+
+      <button id="kettles-shuffle">Shuffle Pattern</button>
+
+      <div id="kettles-move-title">Move the kettles below to match the pattern above</div>
+
+      <div id="kettles-move-container"></div>
+
+      <div id="kettles-status">0 / 12 correct</div>
+
+      <button id="kettles-reset">Reset Kettles</button>
+
+    </div>
   </div>
-
-  <div id="kettles-container"></div>
-
-  <button id="kettles-shuffle">Shuffle Pattern</button>
-
-  <div id="kettles-move-title">Move the kettles below to match the pattern above</div>
-
-  <div id="kettles-move-container"></div>
-
-  <div id="kettles-status">0 / 12 correct</div>
-
-  <button id="kettles-reset">Reset Kettles</button>
 
 </div>
 

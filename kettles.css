@@ -25,12 +25,22 @@
   border-color: #3b7dd8;
 }
 
+#kettles-outer {
+  overflow: hidden;
+}
+
+#kettles-inner {
+  width: 1000px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform-origin: top left;
+}
+
 #kettles-container {
   position: relative;
-  width: 90vw;
-  max-width: 1000px;
-  height: 20vh;
-  min-height: 260px;
+  width: 1000px;
+  height: 260px;
 }
 
 .kettle-slot {
@@ -74,10 +84,8 @@
 
 #kettles-move-container {
   position: relative;
-  width: 90vw;
-  max-width: 1000px;
-  height: 34vh;
-  min-height: 220px;
+  width: 1000px;
+  height: 280px;
   margin-top: 10px;
 }
 
