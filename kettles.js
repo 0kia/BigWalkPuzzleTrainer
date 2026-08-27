@@ -1,260 +1,151 @@
-// ---------- Shared setup ----------
-
-// Positions are percentages (left, top) within #kettles-container.
-// Order = row by row, left to right: row 1 = slots 1-3, row 2 = slots 4-7,
-// row 3 = slots 8-12.
-const KETTLE_POSITIONS = [
-  { x: 6,  y: 30 }, // 1
-  { x: 14, y: 30 }, // 2
-  { x: 48, y: 30 }, // 3
-  { x: 21, y: 48 }, // 4
-  { x: 55, y: 48 }, // 5
-  { x: 68, y: 48 }, // 6
-  { x: 89, y: 48 }, // 7
-  { x: 14, y: 68 }, // 8
-  { x: 35, y: 72 }, // 9
-  { x: 61, y: 72 }, // 10
-  { x: 83, y: 72 }, // 11
-  { x: 96, y: 72 }  // 12
-];
-
-const TOTAL_SLOTS = KETTLE_POSITIONS.length; // 12
-const ON_COUNT = 6; // how many slots are "1" (occupied) each round
-const TOP_ROW_COUNT = 6; // kettle arena: indices 0-5 = top/inner layer
-
-const kettlesContainer = document.getElementById('kettles-container');
-const kettlesShuffleBtn = document.getElementById('kettles-shuffle');
-const moveContainer = document.getElementById('kettles-move-container');
-const kettlesResetBtn = document.getElementById('kettles-reset');
-const kettlesStatusEl = document.getElementById('kettles-status');
-const moveTitleEl = document.getElementById('kettles-move-title');
-const playerButtons = document.querySelectorAll('.player-btn');
-
-let currentPlayer = 1;
-
-// gridStates: the 12 squares in the top grid (0/1)
-// kettleStates: the 12 physical kettle slots below - index 0-5 = top/inner
-//               layer, index 6-11 = floor/outer layer (0/1)
-let gridStates = [];
-let kettleStates = [];
-
-let selectedKettleSlot = null; // used only in Player 1 mode (swap-to-move)
-let gridSlotEls = [];
-let moveSlotEls = [];
-
-function generateRandomStates(minInFirstSix) {
-  let states;
-  do {
-    states = Array(ON_COUNT).fill(1).concat(Array(TOTAL_SLOTS - ON_COUNT).fill(0));
-    for (let i = states.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [states[i], states[j]] = [states[j], states[i]];
-    }
-  } while (minInFirstSix && states.slice(0, 6).reduce((a, b) => a + b, 0) < minInFirstSix);
-  return states;
+#player-toggle {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: clamp(6px, 2vw, 10px);
 }
 
-// ---------- Top grid ----------
-
-function renderGrid() {
-  kettlesContainer.innerHTML = '';
-  gridSlotEls = [];
-
-  KETTLE_POSITIONS.forEach((pos, i) => {
-    const slot = document.createElement('div');
-    slot.className = 'kettle-slot';
-    slot.style.left = pos.x + '%';
-    slot.style.top = pos.y + '%';
-    slot.dataset.index = i;
-
-    if (gridStates[i] === 1) {
-      const dot = document.createElement('div');
-      dot.className = 'dot';
-      slot.appendChild(dot);
-    }
-
-    if (currentPlayer === 2) {
-      slot.classList.add('editable');
-      slot.addEventListener('click', () => {
-        gridStates[i] = gridStates[i] === 1 ? 0 : 1;
-        renderGrid();
-        updateStatus();
-      });
-    }
-
-    kettlesContainer.appendChild(slot);
-    gridSlotEls.push(slot);
-  });
+.player-btn {
+  font-size: clamp(13px, 3.5vw, 15px);
+  width: auto;
+  height: auto;
+  padding: clamp(7px, 2vw, 8px) clamp(12px, 3.5vw, 18px);
+  background: #333;
+  border-radius: 8px;
+  touch-action: manipulation;
 }
 
-// ---------- Movable / display semicircle arena ----------
-
-function computeArcPositions(containerW, containerH, radius) {
-  // 6 points swept left-to-right across a downward-bulging semicircle,
-  // anchored along the top edge of the container.
-  const cx = containerW / 2;
-  const cy = 0;
-  const positions = [];
-  for (let i = 0; i < 6; i++) {
-    const thetaDeg = 180 + (i / 5) * 180;
-    const theta = (thetaDeg * Math.PI) / 180;
-    const x = cx + radius * Math.cos(theta);
-    const y = cy - radius * Math.sin(theta);
-    positions.push({ x, y });
-  }
-  return positions;
+.player-btn.active {
+  background: #3b7dd8;
+  color: #fff;
 }
 
-function renderMoveArena() {
-  moveContainer.innerHTML = '';
-  moveSlotEls = [];
-
-  const rect = moveContainer.getBoundingClientRect();
-  const w = rect.width;
-  const h = rect.height;
-
-  const innerRadius = Math.min(w * 0.32, h * 0.85);
-  const outerRadius = Math.min(w * 0.46, h * 1.15);
-
-  const innerPositions = computeArcPositions(w, h, innerRadius);
-  const outerPositions = computeArcPositions(w, h, outerRadius);
-  const allPositions = innerPositions.concat(outerPositions);
-
-  allPositions.forEach((pos, i) => {
-    const slot = document.createElement('div');
-    slot.className = 'kettle-move-slot';
-    slot.style.left = pos.x + 'px';
-    slot.style.top = pos.y + 'px';
-    slot.dataset.index = i;
-
-    if (currentPlayer === 1) {
-      slot.addEventListener('click', () => handleKettleSlotClick(i));
-    }
-
-    moveContainer.appendChild(slot);
-    moveSlotEls.push(slot);
-  });
-
-  updateMoveArenaVisuals();
+.kettle-slot.editable {
+  cursor: pointer;
 }
 
-function handleKettleSlotClick(index) {
-  if (selectedKettleSlot === null) {
-    if (kettleStates[index] === 1) {
-      selectedKettleSlot = index;
-    }
-  } else if (selectedKettleSlot === index) {
-    selectedKettleSlot = null;
-  } else {
-    const temp = kettleStates[selectedKettleSlot];
-    kettleStates[selectedKettleSlot] = kettleStates[index];
-    kettleStates[index] = temp;
-    selectedKettleSlot = null;
-  }
-  updateMoveArenaVisuals();
-  updateStatus();
+.kettle-slot.editable:hover {
+  border-color: #3b7dd8;
 }
 
-function updateMoveArenaVisuals() {
-  moveSlotEls.forEach((slot, i) => {
-    slot.innerHTML = '';
-    slot.classList.remove('selected', 'has-kettle', 'selectable');
-
-    if (kettleStates[i] === 1) {
-      const icon = document.createElement('div');
-      icon.className = 'kettle-icon';
-      slot.appendChild(icon);
-      slot.classList.add('has-kettle');
-    }
-
-    if (currentPlayer === 1) {
-      if (i === selectedKettleSlot) {
-        slot.classList.add('selected');
-      } else if (selectedKettleSlot !== null || kettleStates[i] === 1) {
-        slot.classList.add('selectable');
-      }
-    }
-  });
+#kettles-container {
+  position: relative;
+  width: 90vw;
+  max-width: 1000px;
+  height: 20vh;
+  min-height: 260px;
 }
 
-// ---------- Status ----------
-
-function updateStatus() {
-  let correctCount = 0;
-  for (let i = 0; i < TOTAL_SLOTS; i++) {
-    if (gridStates[i] === kettleStates[i]) correctCount++;
-  }
-
-  if (correctCount === TOTAL_SLOTS) {
-    kettlesStatusEl.textContent = 'Solved!';
-    kettlesStatusEl.classList.add('solved');
-  } else {
-    kettlesStatusEl.textContent = correctCount + ' / ' + TOTAL_SLOTS + ' correct';
-    kettlesStatusEl.classList.remove('solved');
-  }
+.kettle-slot {
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  transform: translate(-50%, -50%);
+  border: 3px solid #ccc;
+  border-radius: 8px;
+  background: #12121a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-// ---------- Round setup ----------
-
-function updateModeUI() {
-  moveTitleEl.textContent = currentPlayer === 1
-    ? 'Move the kettles below to match the pattern above'
-    : 'Click the grid above to match the kettles below';
-  kettlesResetBtn.textContent = currentPlayer === 1 ? 'Reset Kettles' : 'Reset Grid';
+.kettle-slot .dot {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #eee;
 }
 
-function startRound(regenerateGiven) {
-  if (currentPlayer === 1) {
-    // Grid is the random "given" pattern; kettles are player-editable,
-    // always starting on the top row.
-    if (regenerateGiven) gridStates = generateRandomStates(0);
-    kettleStates = Array(TOTAL_SLOTS).fill(0).map((_, i) => (i < TOP_ROW_COUNT ? 1 : 0));
-    selectedKettleSlot = null;
-  } else {
-    // Kettles are the random "given" pattern (>=3 guaranteed on top row);
-    // grid starts blank and is player-editable.
-    if (regenerateGiven) kettleStates = generateRandomStates(3);
-    gridStates = Array(TOTAL_SLOTS).fill(0);
-  }
-
-  updateModeUI();
-  renderGrid();
-  renderMoveArena();
-  updateStatus();
+#kettles-shuffle {
+  font-size: clamp(14px, 3.5vw, 16px);
+  width: auto;
+  height: auto;
+  padding: clamp(8px, 2.5vw, 10px) clamp(14px, 4vw, 20px);
+  margin-top: clamp(16px, 4vh, 30px);
+  background: #7f5af0;
+  touch-action: manipulation;
 }
 
-// ---------- Buttons ----------
+#kettles-shuffle:hover {
+  background: #6a4bd1;
+}
 
-kettlesShuffleBtn.addEventListener('click', () => startRound(true));
+#kettles-move-title {
+  margin-top: clamp(20px, 5vh, 40px);
+  color: #aaa;
+  font-size: clamp(13px, 3.5vw, 15px);
+  text-align: center;
+  padding: 0 12px;
+}
 
-kettlesResetBtn.addEventListener('click', () => startRound(false));
+#kettles-move-container {
+  position: relative;
+  width: 90vw;
+  max-width: 1000px;
+  height: 34vh;
+  min-height: 220px;
+  margin-top: clamp(8px, 2vh, 10px);
+}
 
-playerButtons.forEach(btn => {
-  btn.addEventListener('click', () => {
-    currentPlayer = parseInt(btn.dataset.player, 10);
-    playerButtons.forEach(b => b.classList.toggle('active', b === btn));
-    startRound(true);
-  });
-});
+.kettle-move-slot {
+  position: absolute;
+  width: 54px;
+  height: 54px;
+  transform: translate(-50%, -50%);
+  border: 3px dashed #555;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: default;
+  touch-action: manipulation;
+  transition: border-color 0.2s ease;
+}
 
-// Re-layout the arcs if the window is resized
-window.addEventListener('resize', () => {
-  if (document.getElementById('page-kettles').classList.contains('active')) {
-    renderMoveArena();
-  }
-});
+.kettle-move-slot.has-kettle {
+  cursor: pointer;
+}
 
-// Re-layout when switching into the Kettles tab, in case sizing changed while hidden.
-// Deferred via setTimeout so it runs after tabs.js's click handler has toggled
-// the 'active' class (listener execution order isn't guaranteed otherwise).
-document.querySelectorAll('.tab-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    if (btn.dataset.page === 'page-kettles') {
-      setTimeout(renderMoveArena, 0);
-    }
-  });
-});
+.kettle-move-slot.selectable {
+  cursor: pointer;
+}
 
-// ---------- Kick things off ----------
+.kettle-move-slot.selected {
+  border-color: #3b7dd8;
+  border-style: solid;
+}
 
-startRound(true);
+.kettle-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #f0c419;
+  border: 2px solid #b8930f;
+  pointer-events: none;
+}
+
+#kettles-status {
+  margin-top: clamp(10px, 2.5vh, 16px);
+  font-size: clamp(14px, 3.5vw, 16px);
+  color: #ccc;
+}
+
+#kettles-status.solved {
+  color: #2ecc71;
+  font-weight: bold;
+}
+
+#kettles-reset {
+  font-size: clamp(14px, 3.5vw, 16px);
+  width: auto;
+  height: auto;
+  padding: clamp(8px, 2.5vw, 10px) clamp(14px, 4vw, 20px);
+  margin-top: clamp(10px, 2.5vh, 16px);
+  margin-bottom: clamp(16px, 4vh, 30px);
+  background: #444;
+  touch-action: manipulation;
+}
+
+#kettles-reset:hover {
+  background: #555;
+}

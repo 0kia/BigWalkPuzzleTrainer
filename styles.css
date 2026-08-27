@@ -1,11 +1,5 @@
-* {
-  box-sizing: border-box;
-  -webkit-tap-highlight-color: transparent;
-}
-
 html, body {
   height: 100%;
-  min-height: 100dvh;
   margin: 0;
   display: flex;
   flex-direction: column;
@@ -13,31 +7,21 @@ html, body {
   background: #1e1e1e;
   font-family: Arial, sans-serif;
   color: #eee;
-  overscroll-behavior-y: contain;
-}
-
-body {
-  width: 100%;
-  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
 
 #tabs {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: clamp(6px, 2vw, 10px);
-  padding: clamp(8px, 2vh, 10px) 8px 0 8px;
-  width: 100%;
+  gap: 10px;
+  padding: 10px 0px 0px 0px;
 }
 
 .tab-btn {
-  font-size: clamp(14px, 3.5vw, 16px);
+  font-size: 16px;
   width: auto;
   height: auto;
-  padding: clamp(8px, 2vw, 10px) clamp(14px, 4vw, 20px);
+  padding: 10px 20px;
   background: #333;
   border-radius: 8px;
-  touch-action: manipulation;
 }
 
 .tab-btn.active {
@@ -52,8 +36,6 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 8px 12px;
-  min-height: 0;
 }
 
 .page.active {
@@ -61,10 +43,9 @@ body {
 }
 
 #streak {
-  font-size: clamp(15px, 4vw, 18px);
-  margin-top: clamp(6px, 2vh, 10px);
+  font-size: 18px;
+  margin-top: 10px;
   color: #ccc;
-  text-align: center;
 }
 
 #streak span {
@@ -74,19 +55,16 @@ body {
 
 #set-switcher {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: clamp(6px, 2vw, 10px);
-  margin-top: clamp(6px, 2vh, 10px);
+  gap: 10px;
+  margin-top: 10px;
 }
 
 #set-switcher button {
-  font-size: clamp(14px, 3.5vw, 16px);
+  font-size: 16px;
   width: auto;
   height: auto;
-  padding: clamp(8px, 2vw, 10px) clamp(12px, 3.5vw, 18px);
+  padding: 10px 18px;
   background: #333;
-  touch-action: manipulation;
 }
 
 #set-switcher button.active {
@@ -98,43 +76,36 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 35vh;
-  height: 35dvh;
-  margin-top: clamp(6px, 2vh, 10px);
+  height: 40vh;
+  margin-top: 10px;
 }
 
 #symbol {
-  max-height: 35vh;
-  max-height: 35dvh;
-  max-width: 85vw;
+  max-height: 40vh;
+  max-width: 80vw;
   object-fit: contain;
 }
 
 #buttons {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  justify-items: center;
-  align-items: center;
-  gap: clamp(8px, 2.5vw, 12px);
-  margin-top: clamp(8px, 2vh, 12px);
+  gap: 10px;
+  margin-top: 10px;
 }
 
-#reroll-container {
-  display: flex;
-  justify-content: center;
-  margin-top: clamp(6px, 2vh, 10px);
+#reroll-container{
+  margin-top: 10px;
 }
 
 button {
-  font-size: clamp(18px, 5vw, 24px);
-  width: clamp(48px, 14vw, 64px);
-  height: clamp(48px, 14vw, 64px);
+  font-size: 24px;
+  width: 60px;
+  height: 60px;
   border: none;
   border-radius: 8px;
   background: #444;
   color: #eee;
   cursor: pointer;
-  touch-action: manipulation;
   transition: background-color 0.2s ease;
 }
 
