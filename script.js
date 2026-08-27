@@ -109,3 +109,46 @@ function showNewSymbol() {
 }
 
 function clearButtonStates() {
+  [...buttonsEl.children].forEach(btn => {
+    btn.classList.remove('correct', 'wrong');
+    btn.disabled = false;
+  });
+}
+
+function handleGuess(value, btn) {
+  if (locked) return;
+
+  if (value === currentAnswer) {
+    locked = true;
+    [...buttonsEl.children].forEach(b => b.disabled = true);
+    btn.classList.add('correct');
+    streak++;
+    streakCountEl.textContent = streak;
+    setTimeout(showNewSymbol, FEEDBACK_DELAY_MS);
+  } else {
+    streak = 0;
+    streakCountEl.textContent = streak;
+    btn.classList.add('wrong');
+    setTimeout(() => btn.classList.remove('wrong'), 400);
+  }
+}
+
+// --- Kick things off ---
+// Preload the starting set first so the very first symbol is fast, then
+// preload the other sets in the background so switching sets is fast too.
+preloadSet(currentSet).then(showNewSymbol);
+
+SETS.forEach(setName => {
+  if (setName === currentSet) return;
+  const idle = window.requestIdleCallback || ((cb) => setTimeout(cb, 200));
+  idle(() => preloadSet(setName));
+});
+
+// Allow number keys 1-9 to trigger the corresponding guess button
+document.addEventListener('keydown', (e) => {
+  const num = parseInt(e.key, 10);
+  if (!Number.isInteger(num) || num < 1 || num > TOTAL_SYMBOLS) return;
+
+  const btn = [...buttonsEl.children].find(b => b.dataset.value === String(num));
+  if (btn && !btn.disabled) btn.click();
+});
