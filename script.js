@@ -144,9 +144,13 @@ SETS.forEach(setName => {
   idle(() => preloadSet(setName));
 });
 
-// Allow number keys 1-9 to trigger the corresponding guess button
+// Allow number keys 1-9 (top row or numpad) to trigger the corresponding guess button.
+// Use e.code rather than e.key for the numpad digits so this keeps working even when
+// NumLock is off (in that state, Numpad1-9 report e.key values like "End"/"ArrowDown"
+// instead of digits, but e.code is always "Numpad1".."Numpad9" regardless of NumLock).
 document.addEventListener('keydown', (e) => {
-  const num = parseInt(e.key, 10);
+  const numpadMatch = /^Numpad([1-9])$/.exec(e.code);
+  const num = numpadMatch ? parseInt(numpadMatch[1], 10) : parseInt(e.key, 10);
   if (!Number.isInteger(num) || num < 1 || num > TOTAL_SYMBOLS) return;
 
   const btn = [...buttonsEl.children].find(b => b.dataset.value === String(num));
