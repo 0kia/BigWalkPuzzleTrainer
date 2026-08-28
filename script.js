@@ -53,24 +53,30 @@ SETS.forEach(setName => {
 for (let i = 1; i <= TOTAL_SYMBOLS; i++) {
   const btn = document.createElement('button');
   btn.textContent = i;
-  btn.dataset.value = i;
-  btn.addEventListener('click', () => handleGuess(i, btn));
+  btn.dataset.value = i;   // current displayed label / what keyboard shortcuts match against
+  btn.dataset.answer = i;  // which image (N.png) this physical slot is always correct for -
+                            // fixed at creation, never touched by the layout toggle below
+  btn.addEventListener('click', () => handleGuess(parseInt(btn.dataset.answer, 10), btn));
   buttonsEl.appendChild(btn);
 }
 
-// Numpad layout toggle - physically reorders the button elements in the DOM to
-// match a numeric keypad (7 8 9 / 4 5 6 / 1 2 3) instead of reading order.
-// appendChild on an already-attached node just moves it, so this simply re-appends
-// each button in the desired sequence.
+// Numpad layout toggle - relabels the (fixed-position) buttons so the grid reads
+// 7 8 9 / 4 5 6 / 1 2 3 like a numeric keypad, instead of moving elements around.
+// This only changes what's displayed (and what a keypress matches via dataset.value) -
+// each physical slot still answers to the same image it always has, via dataset.answer,
+// which this never touches. So: top-left slot always answers image 1, but its label
+// (and the key that triggers it) becomes "7" in numpad mode. Middle row is identical
+// in both layouts (4 5 6), so only the top/bottom rows actually swap labels.
 const numpadLayoutToggle = document.getElementById('numpad-layout-toggle');
 const NUMPAD_LAYOUT_KEY = 'numpadLayout';
+const READING_ORDER = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 const NUMPAD_ORDER = [7, 8, 9, 4, 5, 6, 1, 2, 3];
 
 function setNumpadLayout(enabled) {
-  const order = enabled ? NUMPAD_ORDER : [1, 2, 3, 4, 5, 6, 7, 8, 9];
-  order.forEach(value => {
-    const btn = [...buttonsEl.children].find(b => b.dataset.value === String(value));
-    if (btn) buttonsEl.appendChild(btn);
+  const order = enabled ? NUMPAD_ORDER : READING_ORDER;
+  [...buttonsEl.children].forEach((btn, i) => {
+    btn.textContent = order[i];
+    btn.dataset.value = order[i];
   });
   numpadLayoutToggle.classList.toggle('active', enabled);
   localStorage.setItem(NUMPAD_LAYOUT_KEY, enabled ? '1' : '0');
