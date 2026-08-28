@@ -58,6 +58,30 @@ for (let i = 1; i <= TOTAL_SYMBOLS; i++) {
   buttonsEl.appendChild(btn);
 }
 
+// Numpad layout toggle - physically reorders the button elements in the DOM to
+// match a numeric keypad (7 8 9 / 4 5 6 / 1 2 3) instead of reading order.
+// appendChild on an already-attached node just moves it, so this simply re-appends
+// each button in the desired sequence.
+const numpadLayoutToggle = document.getElementById('numpad-layout-toggle');
+const NUMPAD_LAYOUT_KEY = 'numpadLayout';
+const NUMPAD_ORDER = [7, 8, 9, 4, 5, 6, 1, 2, 3];
+
+function setNumpadLayout(enabled) {
+  const order = enabled ? NUMPAD_ORDER : [1, 2, 3, 4, 5, 6, 7, 8, 9];
+  order.forEach(value => {
+    const btn = [...buttonsEl.children].find(b => b.dataset.value === String(value));
+    if (btn) buttonsEl.appendChild(btn);
+  });
+  numpadLayoutToggle.classList.toggle('active', enabled);
+  localStorage.setItem(NUMPAD_LAYOUT_KEY, enabled ? '1' : '0');
+}
+
+numpadLayoutToggle.addEventListener('click', () => {
+  setNumpadLayout(!numpadLayoutToggle.classList.contains('active'));
+});
+
+setNumpadLayout(localStorage.getItem(NUMPAD_LAYOUT_KEY) === '1');
+
 // Reroll button
 const rerollBtn = document.createElement('button');
 rerollBtn.id = 'reroll';
